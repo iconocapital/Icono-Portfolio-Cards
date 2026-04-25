@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import { ArrowLeft, ArrowUpRight, Lock, Sparkles } from "lucide-react"
 import { portfolios, type Portfolio } from "../lib/portfolio-data"
 import { tokens, styles } from "../lib/design-kit"
@@ -14,6 +14,7 @@ export function PortfolioGallery() {
   const active = portfolios.find((p) => p.id === activeId)
 
   return (
+    <MotionConfig reducedMotion="user">
     <div
       className="min-h-screen"
       style={{ background: tokens.cream, color: tokens.ink, fontFamily: "var(--font-sans)" }}
@@ -41,6 +42,7 @@ export function PortfolioGallery() {
         </div>
       </footer>
     </div>
+    </MotionConfig>
   )
 }
 
@@ -85,9 +87,9 @@ function PortfolioCard({
 }) {
   const isActive = portfolio.status === "active"
   const isFlagship = portfolio.id === "voyageurs"
+  const isFinale = portfolio.id === "saguaro"
 
-  // Grid rhythm across 12 cols: 7+5, 7+5, 12. The trailing card claims a
-  // full row so the lineup ends on a deliberate hero, not a half-empty row.
+  // Grid rhythm across 12 cols: 7+5, 7+5, 12 (finale).
   const span: Record<string, string> = {
     voyageurs: "col-span-12 md:col-span-7",
     zion: "col-span-12 md:col-span-5",
@@ -96,7 +98,11 @@ function PortfolioCard({
     saguaro: "col-span-12",
   }
 
-  const minH = isFlagship ? "min-h-[440px] md:min-h-[460px]" : "min-h-[380px]"
+  const minH = isFinale
+    ? "min-h-[480px] md:min-h-[580px]"
+    : isFlagship
+    ? "min-h-[440px] md:min-h-[460px]"
+    : "min-h-[380px]"
 
   // Bond allocation for shield motif
   const bondPct = portfolio.sleeves
@@ -113,6 +119,7 @@ function PortfolioCard({
       whileHover={{ y: -6 }}
       className={[
         "group relative isolate overflow-hidden rounded-[24px] text-left transition-shadow duration-500",
+        "focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-4 focus-visible:ring-offset-[#fafaf7]",
         span[portfolio.id],
         minH,
         isActive ? "cursor-pointer" : "cursor-not-allowed opacity-90",
@@ -121,7 +128,9 @@ function PortfolioCard({
         background: portfolio.palette.bg,
         color: portfolio.palette.fg,
         boxShadow: "0 1px 2px rgba(28,83,85,0.04), 0 8px 32px rgba(28,83,85,0.06)",
-      }}
+        // CSS custom property to color the Tailwind focus ring with kit coral
+        ["--tw-ring-color" as string]: tokens.coral,
+      } as React.CSSProperties}
     >
       {/* PARK SCENE — base identity layer (silhouette of the actual park). */}
       <ParkScene parkId={portfolio.id} palette={portfolio.palette} />
@@ -147,18 +156,37 @@ function PortfolioCard({
             <h3
               className={[
                 "mt-3 leading-[0.92]",
-                isFlagship ? "text-[64px] md:text-[80px]" : "text-[40px] md:text-[52px]",
+                isFinale
+                  ? "text-[80px] md:text-[120px]"
+                  : isFlagship
+                  ? "text-[64px] md:text-[80px]"
+                  : "text-[40px] md:text-[52px]",
               ].join(" ")}
               style={{ ...styles.display, fontWeight: 700, color: portfolio.palette.fg }}
             >
               {portfolio.name}
             </h3>
             <p
-              className="mt-3 max-w-[300px] text-[14px] leading-snug"
+              className={[
+                "mt-3 leading-snug",
+                isFinale ? "max-w-[460px] text-[16px] md:text-[18px]" : "max-w-[300px] text-[14px]",
+              ].join(" ")}
               style={{ opacity: 0.78 }}
             >
               {portfolio.subtitle.replace("Target Allocation — ", "")}
             </p>
+            {isFinale && (
+              <p
+                className="mt-4 max-w-[460px] text-[14px] italic leading-relaxed"
+                style={{
+                  ...styles.serif,
+                  opacity: 0.85,
+                  color: portfolio.palette.fg,
+                }}
+              >
+                And for those who&apos;d rather the journey arrive on time.
+              </p>
+            )}
           </div>
 
           {isFlagship && (

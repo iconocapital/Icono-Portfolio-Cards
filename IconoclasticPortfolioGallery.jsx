@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import {
   ArrowLeft,
   ArrowUpDown,
@@ -305,6 +305,7 @@ export default function IconoclasticPortfolioGallery() {
   const active = portfolios.find((p) => p.id === activeId)
 
   return (
+    <MotionConfig reducedMotion="user">
     <div
       className="min-h-screen"
       style={{
@@ -355,6 +356,7 @@ export default function IconoclasticPortfolioGallery() {
         </div>
       </footer>
     </div>
+    </MotionConfig>
   )
 }
 
@@ -417,7 +419,8 @@ function GalleryView({ onSelect }) {
 function PortfolioCard({ portfolio, index, onSelect }) {
   const isActive = portfolio.status === "active"
   const isFlagship = portfolio.id === "voyageurs"
-  // Layout: flagship spans 7 cols, others rotate 5/7/5/7 for visual rhythm.
+  const isFinale = portfolio.id === "saguaro"
+  // Grid rhythm: 7+5, 7+5, 12 (finale).
   const span = {
     voyageurs: "col-span-12 md:col-span-7",
     zion: "col-span-12 md:col-span-5",
@@ -426,7 +429,11 @@ function PortfolioCard({ portfolio, index, onSelect }) {
     saguaro: "col-span-12",
   }[portfolio.id]
 
-  const minH = isFlagship ? "min-h-[440px] md:min-h-[460px]" : "min-h-[380px]"
+  const minH = isFinale
+    ? "min-h-[480px] md:min-h-[580px]"
+    : isFlagship
+    ? "min-h-[440px] md:min-h-[460px]"
+    : "min-h-[380px]"
 
   // Bond allocation label for shield motif (Saguaro, etc.)
   const bondPct = portfolio.sleeves
@@ -443,6 +450,7 @@ function PortfolioCard({ portfolio, index, onSelect }) {
       whileHover={{ y: -6 }}
       className={[
         "group relative isolate overflow-hidden rounded-[24px] text-left transition-shadow duration-500",
+        "focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-4 focus-visible:ring-offset-[#fafaf7]",
         span,
         minH,
         isActive ? "cursor-pointer" : "cursor-not-allowed opacity-90",
@@ -452,6 +460,7 @@ function PortfolioCard({ portfolio, index, onSelect }) {
         color: portfolio.palette.fg,
         boxShadow:
           "0 1px 2px rgba(28,83,85,0.04), 0 8px 32px rgba(28,83,85,0.06)",
+        "--tw-ring-color": tokens.coral,
       }}
     >
       {/* PARK SCENE — base identity layer. Hand-drawn silhouette of the park
@@ -485,7 +494,9 @@ function PortfolioCard({ portfolio, index, onSelect }) {
             <h3
               className={[
                 "mt-3 leading-[0.92]",
-                isFlagship
+                isFinale
+                  ? "text-[80px] md:text-[120px]"
+                  : isFlagship
                   ? "text-[64px] md:text-[80px]"
                   : "text-[40px] md:text-[52px]",
               ].join(" ")}
@@ -498,11 +509,28 @@ function PortfolioCard({ portfolio, index, onSelect }) {
               {portfolio.name}
             </h3>
             <p
-              className="mt-3 max-w-[300px] text-[14px] leading-snug"
+              className={[
+                "mt-3 leading-snug",
+                isFinale
+                  ? "max-w-[460px] text-[16px] md:text-[18px]"
+                  : "max-w-[300px] text-[14px]",
+              ].join(" ")}
               style={{ opacity: 0.78 }}
             >
               {portfolio.subtitle.replace("Target Allocation — ", "")}
             </p>
+            {isFinale && (
+              <p
+                className="mt-4 max-w-[460px] text-[14px] italic leading-relaxed"
+                style={{
+                  ...styles.serif,
+                  opacity: 0.85,
+                  color: portfolio.palette.fg,
+                }}
+              >
+                And for those who&apos;d rather the journey arrive on time.
+              </p>
+            )}
           </div>
 
           {isFlagship && (
