@@ -28,3 +28,10 @@ next-env.d.ts
 
 # stale local stubs
 next.config.test.mjs
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# pnpm transient artifacts
+_tmp_*
