@@ -48,14 +48,14 @@ export function PortfolioGallery() {
 
 function GalleryView({ onSelect }: { onSelect: (id: string) => void }) {
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-8">
+    <div className="mx-auto max-w-7xl px-5 md:px-8">
       <section className="pt-16 pb-12 md:pt-24" style={{ borderBottom: `2px solid ${tokens.ink}` }}>
         <p className="text-[11px] font-bold uppercase" style={{ ...styles.mono, color: tokens.accentTeal }}>
           Icono · The National Parks Series · v1
         </p>
         <h1
-          className="mt-4 leading-[0.92]"
-          style={{ ...styles.display, fontWeight: 700, color: tokens.deepTeal, fontSize: "clamp(48px, 8vw, 96px)" }}
+          className="mt-4 pr-2 leading-[0.92]"
+          style={{ ...styles.display, fontWeight: 700, color: tokens.deepTeal, fontSize: "clamp(44px, 8vw, 96px)" }}
         >
           Five portfolios.<br />
           <span style={{ color: tokens.coral }}>One philosophy.</span>
@@ -144,7 +144,7 @@ function PortfolioCard({
       />
 
       {/* CONTENT — flex column. Header up top, YTD pinned to bottom. */}
-      <div className="relative z-10 flex h-full min-h-[inherit] flex-col p-9">
+      <div className="relative z-10 flex h-full min-h-[inherit] flex-col p-7 md:p-9">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <p
@@ -157,9 +157,9 @@ function PortfolioCard({
               className={[
                 "mt-3 leading-[0.92]",
                 isFinale
-                  ? "text-[80px] md:text-[120px]"
+                  ? "text-[64px] md:text-[120px]"
                   : isFlagship
-                  ? "text-[64px] md:text-[80px]"
+                  ? "text-[56px] md:text-[80px]"
                   : "text-[40px] md:text-[52px]",
               ].join(" ")}
               style={{ ...styles.display, fontWeight: 700, color: portfolio.palette.fg }}
@@ -266,7 +266,7 @@ function PortfolioCard({
 
 function DetailView({ portfolio, onBack }: { portfolio: Portfolio; onBack: () => void }) {
   return (
-    <div className="mx-auto max-w-7xl px-4 md:px-8 pb-20 pt-8">
+    <div className="mx-auto max-w-7xl px-5 md:px-8 pb-20 pt-8">
       <button
         onClick={onBack}
         className="group mb-8 inline-flex items-center gap-2 text-sm transition-colors"

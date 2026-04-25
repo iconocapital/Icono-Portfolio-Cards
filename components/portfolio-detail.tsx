@@ -56,7 +56,7 @@ export function PortfolioDetail({ portfolio }: { portfolio: Portfolio }) {
         }}
       >
         <div className="relative grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="px-8 py-12 md:px-14 md:py-16 lg:py-24">
+          <div className="px-6 py-10 md:px-14 md:py-16 lg:py-24">
             <p className="mb-5 text-[11px] font-bold uppercase" style={{ ...styles.mono, color: portfolio.palette.accent }}>
               Iconoclastic · Model Series · {portfolio.id.toUpperCase()}
             </p>
@@ -107,7 +107,7 @@ export function PortfolioDetail({ portfolio }: { portfolio: Portfolio }) {
             </div>
           </div>
 
-          <div className="relative min-h-[28rem] overflow-hidden lg:min-h-[44rem]">
+          <div className="relative min-h-[16rem] overflow-hidden md:min-h-[22rem] lg:min-h-[44rem]">
             <ParkScene parkId={portfolio.id} palette={portfolio.palette} />
             <HeroMotifStage
               motif={portfolio.motif}
@@ -317,24 +317,24 @@ function SleeveRow({
       <button
         onClick={hasHoldings ? onToggle : undefined}
         className={[
-          "flex w-full items-center gap-5 p-6 text-left transition-colors md:p-7",
+          "flex w-full flex-wrap items-center gap-x-4 gap-y-3 p-5 text-left transition-colors md:flex-nowrap md:gap-5 md:p-7",
           hasHoldings ? "hover:bg-black/5" : "cursor-default",
         ].join(" ")}
       >
         <div
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[14px]"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[12px] md:h-16 md:w-16 md:rounded-[14px]"
           style={{
             background: standout ? tokens.accentTeal : tokens.deepTeal,
             color: standout ? tokens.ink : tokens.cream,
             ...styles.display,
             fontWeight: 700,
-            fontSize: 18,
+            fontSize: 16,
           }}
         >
           {sleeve.allocation}%
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 flex-shrink basis-[60%]">
           <div className="flex flex-wrap items-center gap-2">
             <p
               className="text-[10px] font-bold uppercase"
@@ -353,18 +353,18 @@ function SleeveRow({
             )}
           </div>
           <h3
-            className="mt-1"
+            className="mt-1 text-[26px] md:text-[32px]"
             style={{
               ...styles.display,
               fontWeight: 700,
-              fontSize: 32,
               lineHeight: 0.95,
               color: standout ? tokens.cream : tokens.deepTeal,
             }}
           >
             {sleeve.name}
           </h3>
-          <p className="mt-2 max-w-2xl text-[14px]" style={{ opacity: 0.75 }}>
+          {/* Description: hidden on mobile (revealed when expanded), visible on md+ */}
+          <p className="mt-2 hidden max-w-2xl text-[14px] md:block" style={{ opacity: 0.75 }}>
             {sleeve.description}
           </p>
         </div>
@@ -372,11 +372,10 @@ function SleeveRow({
         <div className="text-right">
           <p className="text-[10px] font-bold uppercase" style={{ ...styles.mono, opacity: 0.65 }}>YTD</p>
           <p
-            className="mt-1"
+            className="mt-1 text-[32px] md:text-[40px]"
             style={{
               ...styles.display,
               fontWeight: 700,
-              fontSize: 40,
               lineHeight: 0.9,
               color: standout ? tokens.accentTeal : tokens.deepTeal,
             }}
@@ -410,7 +409,14 @@ function SleeveRow({
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="px-6 pb-7 md:px-7">
+            <div className="px-5 pb-6 md:px-7 md:pb-7">
+              {/* Description: only shown here on mobile (closed-row hides it) */}
+              <p
+                className="mb-5 max-w-2xl text-[14px] md:hidden"
+                style={{ opacity: 0.75 }}
+              >
+                {sleeve.description}
+              </p>
               <HoldingsTable
                 sortKey={sortKey}
                 sortDirection={sortDirection}
@@ -471,8 +477,9 @@ function HoldingsTable({
         </div>
       </div>
 
+      {/* Header — desktop grid, mobile shows only Symbol + Weight sort buttons */}
       <div
-        className="grid grid-cols-[1.1fr_1.5fr_0.6fr_0.9fr] items-center gap-4 px-5 py-3 text-[10px] font-bold uppercase"
+        className="hidden md:grid md:grid-cols-[1.1fr_1.5fr_0.6fr_0.9fr] items-center gap-4 px-5 py-3 text-[10px] font-bold uppercase"
         style={{ ...styles.mono, color: fgSoft }}
       >
         <button onClick={() => onSort("symbol")} className="flex items-center gap-1 opacity-90 transition-opacity hover:opacity-100">
@@ -489,6 +496,26 @@ function HoldingsTable({
         </button>
         <span className="text-right">Visualization</span>
       </div>
+      {/* Mobile sort header — bigger tap targets */}
+      <div
+        className="flex md:hidden items-center justify-between px-5 py-3 text-[10px] font-bold uppercase"
+        style={{ ...styles.mono, color: fgSoft }}
+      >
+        <button
+          onClick={() => onSort("symbol")}
+          className="flex min-h-[44px] items-center gap-1 opacity-90"
+        >
+          Symbol
+          <ArrowUpDown className={`h-3 w-3 transition-opacity ${sortKey === "symbol" ? "opacity-100" : "opacity-40"}`} />
+        </button>
+        <button
+          onClick={() => onSort("weight")}
+          className="flex min-h-[44px] items-center gap-1 opacity-90"
+        >
+          Weight
+          <ArrowUpDown className={`h-3 w-3 transition-opacity ${sortKey === "weight" ? "opacity-100" : "opacity-40"}`} />
+        </button>
+      </div>
 
       <div>
         {sortedHoldings.map((h, i) => (
@@ -497,36 +524,57 @@ function HoldingsTable({
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.025 }}
-            className="grid grid-cols-[1.1fr_1.5fr_0.6fr_0.9fr] items-center gap-4 px-5 py-3.5 transition-colors"
+            className="block md:grid md:grid-cols-[1.1fr_1.5fr_0.6fr_0.9fr] md:items-center md:gap-4 px-5 py-3.5 transition-colors"
             style={{ borderTop: `1px solid ${rowBorder}` }}
           >
-            <div className="flex items-center gap-2.5">
-              <span
-                className="inline-flex h-8 w-8 items-center justify-center rounded-[8px]"
-                style={{
-                  background: tokens.ink,
-                  color: tokens.cream,
-                  ...styles.mono,
-                  fontWeight: 700,
-                  fontSize: 10,
-                }}
-              >
-                {h.symbol.slice(0, 4)}
+            {/* Mobile: stacked 2-row layout. Desktop: inline grid (4 cols). */}
+            <div className="flex items-center justify-between gap-3 md:contents">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px]"
+                  style={{
+                    background: tokens.ink,
+                    color: tokens.cream,
+                    ...styles.mono,
+                    fontWeight: 700,
+                    fontSize: 10,
+                  }}
+                >
+                  {h.symbol.slice(0, 4)}
+                </span>
+                <span style={{ ...styles.display, fontWeight: 600, fontSize: 15, color: fg }}>{h.symbol}</span>
+              </div>
+              <span className="hidden md:block truncate text-[13px]" style={{ color: fgSoft }}>
+                {tickerNames[h.symbol] ?? "—"}
               </span>
-              <span style={{ ...styles.display, fontWeight: 600, fontSize: 15, color: fg }}>{h.symbol}</span>
+              <span
+                className="text-right tabular-nums shrink-0"
+                style={{ ...styles.mono, fontWeight: 700, fontSize: 14, color: fg }}
+              >
+                {h.weight.toFixed(2)}%
+              </span>
+              <div className="hidden md:flex justify-end">
+                <div
+                  className="h-1.5 w-full max-w-[120px] overflow-hidden rounded-full"
+                  style={{ background: inverted ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }}
+                >
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(h.weight / max) * 100}%` }}
+                    transition={{ duration: 0.6, delay: 0.1 + i * 0.03 }}
+                    className="h-full rounded-full"
+                    style={{ background: tokens.accentTeal }}
+                  />
+                </div>
+              </div>
             </div>
-            <span className="truncate text-[13px]" style={{ color: fgSoft }}>
-              {tickerNames[h.symbol] ?? "—"}
-            </span>
-            <span
-              className="text-right tabular-nums"
-              style={{ ...styles.mono, fontWeight: 700, fontSize: 13, color: fg }}
-            >
-              {h.weight.toFixed(2)}%
-            </span>
-            <div className="flex justify-end">
+            {/* Mobile-only second row — name + weight bar */}
+            <div className="mt-2 flex items-center gap-3 md:hidden">
+              <span className="truncate text-[12px] flex-1" style={{ color: fgSoft }}>
+                {tickerNames[h.symbol] ?? "—"}
+              </span>
               <div
-                className="h-1.5 w-full max-w-[120px] overflow-hidden rounded-full"
+                className="h-1 w-[80px] shrink-0 overflow-hidden rounded-full"
                 style={{ background: inverted ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }}
               >
                 <motion.div
@@ -543,7 +591,7 @@ function HoldingsTable({
       </div>
 
       <div
-        className="grid grid-cols-[1.1fr_1.5fr_0.6fr_0.9fr] items-center gap-4 px-5 py-3.5"
+        className="flex md:grid md:grid-cols-[1.1fr_1.5fr_0.6fr_0.9fr] items-center justify-between gap-4 px-5 py-3.5"
         style={{
           borderTop: `1px solid ${inverted ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
           background: inverted ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.02)",
@@ -561,7 +609,7 @@ function HoldingsTable({
         >
           Total
         </span>
-        <span className="text-[13px]" style={{ color: fgSoft }}>
+        <span className="hidden md:block text-[13px]" style={{ color: fgSoft }}>
           {sortedHoldings.length} positions
         </span>
         <span

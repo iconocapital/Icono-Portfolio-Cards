@@ -22,8 +22,8 @@ import type { Portfolio, Sleeve } from "../lib/portfolio-data"
 export function AllocationAtlas({ portfolio }: { portfolio: Portfolio }) {
   return (
     <div
-      className="relative overflow-hidden rounded-[24px] p-9"
-      style={{ background: tokens.sky, color: tokens.ink, minHeight: 360 }}
+      className="relative overflow-hidden rounded-[24px] p-7 md:p-9"
+      style={{ background: tokens.sky, color: tokens.ink, minHeight: 320 }}
     >
       <p
         className="text-[10px] font-bold"
@@ -31,40 +31,54 @@ export function AllocationAtlas({ portfolio }: { portfolio: Portfolio }) {
       >
         Diversification · ATLAS
       </p>
-      <h3
-        className="mt-3 leading-[0.92]"
-        style={{
-          ...styles.display,
-          fontWeight: 700,
-          fontSize: 44,
-          color: tokens.ink,
-        }}
-      >
-        Allocation
-        <br />
-        Atlas
-      </h3>
-      <p className="mt-3 max-w-[260px] text-[14px]" style={{ opacity: 0.78 }}>
-        Every dollar mapped. {portfolio.sleeves.length} sleeves, working in
-        concert.
-      </p>
 
-      <AtlasDonut sleeves={portfolio.sleeves} />
+      {/* Mobile: title on left, donut floats inline on right.
+          Desktop: title left, donut absolutely positioned top-right. */}
+      <div className="mt-3 flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h3
+            className="leading-[0.92] text-[36px] md:text-[44px]"
+            style={{
+              ...styles.display,
+              fontWeight: 700,
+              color: tokens.ink,
+            }}
+          >
+            Allocation
+            <br />
+            Atlas
+          </h3>
+          <p className="mt-3 max-w-[260px] text-[14px]" style={{ opacity: 0.78 }}>
+            Every dollar mapped. {portfolio.sleeves.length} sleeves, working in
+            concert.
+          </p>
+        </div>
+
+        {/* Mobile-only inline donut, smaller */}
+        <div className="relative h-[110px] w-[110px] shrink-0 md:hidden">
+          <InlineDonut sleeves={portfolio.sleeves} size={110} />
+        </div>
+      </div>
+
+      {/* Desktop-only positioned donut */}
+      <div className="hidden md:block">
+        <AtlasDonut sleeves={portfolio.sleeves} />
+      </div>
 
       {/* Sleeve list */}
-      <div className="mt-6 space-y-1.5">
+      <div className="mt-6 space-y-2 md:space-y-1.5">
         {portfolio.sleeves.map((s) => (
           <div key={s.id} className="flex items-center gap-2.5">
             <span
               className="h-2.5 w-2.5 shrink-0 rounded-full"
               style={{ background: sleeveColor(s.id) }}
             />
-            <span className="truncate text-[12px]" style={{ opacity: 0.85 }}>
+            <span className="truncate text-[13px] md:text-[12px]" style={{ opacity: 0.85 }}>
               {s.name}
             </span>
             <span
               className="ml-auto tabular-nums"
-              style={{ ...styles.mono, fontWeight: 700, fontSize: 11 }}
+              style={{ ...styles.mono, fontWeight: 700, fontSize: 12 }}
             >
               {s.allocation}%
             </span>
@@ -72,6 +86,62 @@ export function AllocationAtlas({ portfolio }: { portfolio: Portfolio }) {
         ))}
       </div>
     </div>
+  )
+}
+
+function InlineDonut({ sleeves, size }: { sleeves: Sleeve[]; size: number }) {
+  const r = 38
+  const c = 2 * Math.PI * r
+  let cumulative = 0
+  const segments = sleeves.map((s) => {
+    const len = (s.allocation / 100) * c
+    const offset = -cumulative
+    cumulative += len
+    return { id: s.id, len, offset, color: sleeveColor(s.id) }
+  })
+  return (
+    <>
+      <motion.svg
+        viewBox="0 0 100 100"
+        width={size}
+        height={size}
+        style={{ transform: "rotate(-90deg)" }}
+        animate={{ rotate: -90 + 360 }}
+        transition={{ duration: 24, repeat: Infinity, ease: "linear" }}
+      >
+        <circle cx={50} cy={50} r={r} fill="none" stroke="rgba(10,31,32,0.08)" strokeWidth={14} />
+        {segments.map((seg) => (
+          <circle
+            key={seg.id}
+            cx={50}
+            cy={50}
+            r={r}
+            fill="none"
+            stroke={seg.color}
+            strokeWidth={14}
+            strokeDasharray={`${seg.len} ${c}`}
+            strokeDashoffset={seg.offset}
+            strokeLinecap="butt"
+          />
+        ))}
+      </motion.svg>
+      <div
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center"
+        style={{ color: tokens.ink }}
+      >
+        <div
+          style={{ ...styles.display, fontWeight: 700, fontSize: 22, lineHeight: 1, letterSpacing: "-0.04em" }}
+        >
+          {sleeves.length}
+        </div>
+        <div
+          className="mt-0.5 text-[7px] font-bold uppercase"
+          style={{ ...styles.mono, opacity: 0.7, letterSpacing: "0.16em" }}
+        >
+          sleeves
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -190,12 +260,12 @@ export function PortfolioCompass({ portfolio }: { portfolio: Portfolio }) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-[24px] p-9"
+      className="relative overflow-hidden rounded-[24px] p-7 md:p-9"
       style={{
         background: tokens.creamWarm,
         color: tokens.ink,
         border: `2px solid ${tokens.ink}`,
-        minHeight: 360,
+        minHeight: 320,
       }}
     >
       <p
@@ -204,29 +274,40 @@ export function PortfolioCompass({ portfolio }: { portfolio: Portfolio }) {
       >
         Allocation · COMPASS
       </p>
-      <h3
-        className="mt-3 leading-[0.92]"
-        style={{
-          ...styles.display,
-          fontWeight: 700,
-          fontSize: 44,
-          color: tokens.deepTeal,
-        }}
-      >
-        Portfolio
-        <br />
-        Compass
-      </h3>
-      <p className="mt-3 max-w-[260px] text-[14px]" style={{ color: tokens.inkSoft }}>
-        {portfolio.name} sits at <strong>{equityPct.toFixed(0)}% equity</strong>
-        {" — "}{positionLabel(portfolio.id)} of the series.
-      </p>
 
-      <CompassDial angle={angle} palette={portfolio.palette} />
+      <div className="mt-3 flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h3
+            className="leading-[0.92] text-[36px] md:text-[44px]"
+            style={{
+              ...styles.display,
+              fontWeight: 700,
+              color: tokens.deepTeal,
+            }}
+          >
+            Portfolio
+            <br />
+            Compass
+          </h3>
+          <p className="mt-3 max-w-[260px] text-[14px]" style={{ color: tokens.inkSoft }}>
+            {portfolio.name} sits at <strong>{equityPct.toFixed(0)}% equity</strong>
+            {" — "}{positionLabel(portfolio.id)} of the series.
+          </p>
+        </div>
+        {/* Mobile inline mini-dial */}
+        <div className="relative h-[110px] w-[110px] shrink-0 md:hidden">
+          <InlineCompass angle={angle} palette={portfolio.palette} />
+        </div>
+      </div>
 
-      {/* Tick legend along the bottom */}
+      {/* Desktop-only positioned dial */}
+      <div className="hidden md:block">
+        <CompassDial angle={angle} palette={portfolio.palette} />
+      </div>
+
+      {/* Tick legend along the bottom — desktop only (below the dial) */}
       <div
-        className="absolute bottom-7 left-9 right-9 flex justify-between text-[9px] font-bold uppercase"
+        className="absolute bottom-7 left-9 right-9 hidden md:flex justify-between text-[9px] font-bold uppercase"
         style={{ ...styles.mono, color: tokens.inkSoft, letterSpacing: "0.16em" }}
       >
         {COMPASS_ORDER.map((id) => (
@@ -241,6 +322,89 @@ export function PortfolioCompass({ portfolio }: { portfolio: Portfolio }) {
           </span>
         ))}
       </div>
+
+      {/* Mobile tick legend — readable park abbreviations + position label */}
+      <div
+        className="mt-5 flex items-center justify-between md:hidden text-[10px] font-bold uppercase"
+        style={{ ...styles.mono, color: tokens.inkSoft, letterSpacing: "0.14em" }}
+      >
+        <span style={{ opacity: 0.6 }}>← Conservative</span>
+        <span style={{ opacity: 0.6 }}>Aggressive →</span>
+      </div>
+      <div className="mt-2 flex md:hidden items-center justify-between gap-2">
+        {COMPASS_ORDER.map((id) => (
+          <div
+            key={id}
+            className="flex flex-1 flex-col items-center gap-1"
+          >
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{
+                background: id === portfolio.id ? tokens.coral : tokens.inkSoft,
+                opacity: id === portfolio.id ? 1 : 0.4,
+              }}
+            />
+            <span
+              className="text-[10px] font-bold uppercase truncate w-full text-center"
+              style={{
+                ...styles.mono,
+                letterSpacing: "0.1em",
+                color: id === portfolio.id ? tokens.deepTeal : tokens.inkSoft,
+                opacity: id === portfolio.id ? 1 : 0.55,
+              }}
+            >
+              {id.slice(0, 4)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function InlineCompass({ angle, palette }: { angle: number; palette: Palette }) {
+  return (
+    <div className="absolute inset-0">
+      <div className="absolute inset-0 rounded-full" style={{ border: `1.2px solid ${tokens.ink}` }} />
+      <div
+        className="absolute rounded-full"
+        style={{ inset: 14, border: `1.2px dashed ${tokens.ink}`, opacity: 0.4 }}
+      />
+      <motion.div
+        className="absolute"
+        style={{
+          top: "50%",
+          left: "50%",
+          width: 44,
+          height: 2,
+          background: tokens.deepTeal,
+          transformOrigin: "left center",
+          marginTop: -1,
+        }}
+        initial={{ rotate: -120 }}
+        animate={{ rotate: angle }}
+        transition={{ type: "spring", stiffness: 60, damping: 14, delay: 0.2 }}
+      >
+        <span
+          className="absolute rounded-full"
+          style={{
+            right: -4,
+            top: -3,
+            width: 8,
+            height: 8,
+            background: palette.accent === tokens.cream ? tokens.coral : palette.accent,
+          }}
+        />
+      </motion.div>
+      <div
+        className="absolute top-1/2 left-1/2 rounded-full"
+        style={{
+          width: 9,
+          height: 9,
+          background: tokens.deepTeal,
+          transform: "translate(-50%, -50%)",
+        }}
+      />
     </div>
   )
 }
