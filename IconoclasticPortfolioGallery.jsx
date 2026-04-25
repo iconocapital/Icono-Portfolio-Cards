@@ -313,64 +313,6 @@ export default function IconoclasticPortfolioGallery() {
         fontFamily: fonts.sans,
       }}
     >
-      {/* Top nav */}
-      <header
-        className="sticky top-0 z-30 backdrop-blur-xl"
-        style={{
-          background: `${tokens.cream}cc`,
-          borderBottom: `2px solid ${tokens.ink}`,
-        }}
-      >
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:px-8">
-          <div className="flex items-center gap-2.5">
-            <span
-              className="inline-block h-2.5 w-2.5 rounded-full"
-              style={{ background: tokens.accentTeal }}
-            />
-            <span
-              className="text-lg"
-              style={{ ...styles.display, fontWeight: 700, color: tokens.deepTeal }}
-            >
-              Iconoclastic
-            </span>
-            <span
-              className="ml-1.5 text-[10px] font-bold uppercase"
-              style={{ ...styles.mono, color: tokens.inkSoft }}
-            >
-              Capital
-            </span>
-          </div>
-          <nav
-            className="hidden items-center gap-7 text-sm md:flex"
-            style={{ color: tokens.inkSoft }}
-          >
-            <a className="transition-colors hover:opacity-100 opacity-80" href="#series">
-              Model Series
-            </a>
-            <a className="transition-colors hover:opacity-100 opacity-80" href="#">
-              Research
-            </a>
-            <a className="transition-colors hover:opacity-100 opacity-80" href="#">
-              Clients
-            </a>
-            <a className="transition-colors hover:opacity-100 opacity-80" href="#">
-              About
-            </a>
-          </nav>
-          <button
-            className="rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-transform hover:scale-105"
-            style={{
-              background: tokens.deepTeal,
-              color: tokens.cream,
-              ...styles.mono,
-              letterSpacing: "0.14em",
-            }}
-          >
-            Sign in
-          </button>
-        </div>
-      </header>
-
       <AnimatePresence mode="wait">
         {!active ? (
           <motion.div
