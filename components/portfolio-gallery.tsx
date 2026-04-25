@@ -5,13 +5,15 @@ import { motion, AnimatePresence, MotionConfig } from "framer-motion"
 import { ArrowLeft, ArrowUpRight, Lock, Sparkles } from "lucide-react"
 import { portfolios, type Portfolio } from "../lib/portfolio-data"
 import { tokens, styles } from "../lib/design-kit"
+import { teaseYtd, teaseAlpha, type ViewMode } from "../lib/prospect-data"
 import { CardMotif } from "./motifs"
 import { ParkScene } from "./park-scenes"
 import { PortfolioDetail } from "./portfolio-detail"
 
-export function PortfolioGallery() {
+export function PortfolioGallery({ mode = "client" }: { mode?: ViewMode } = {}) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const active = portfolios.find((p) => p.id === activeId)
+  const isProspect = mode === "prospect"
 
   return (
     <MotionConfig reducedMotion="user">
@@ -19,14 +21,16 @@ export function PortfolioGallery() {
       className="min-h-screen"
       style={{ background: tokens.cream, color: tokens.ink, fontFamily: "var(--font-sans)" }}
     >
+      {isProspect && <ProspectBanner />}
+
       <AnimatePresence mode="wait">
         {!active ? (
           <motion.div key="gallery" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}>
-            <GalleryView onSelect={setActiveId} />
+            <GalleryView onSelect={setActiveId} mode={mode} />
           </motion.div>
         ) : (
           <motion.div key={`detail-${active.id}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} transition={{ duration: 0.4 }}>
-            <DetailView portfolio={active} onBack={() => setActiveId(null)} />
+            <DetailView portfolio={active} onBack={() => setActiveId(null)} mode={mode} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -46,7 +50,54 @@ export function PortfolioGallery() {
   )
 }
 
-function GalleryView({ onSelect }: { onSelect: (id: string) => void }) {
+function ProspectBanner() {
+  return (
+    <div
+      className="sticky top-0 z-30 backdrop-blur-md"
+      style={{
+        background: `${tokens.ink}f0`,
+        color: tokens.cream,
+        borderBottom: `1px solid ${tokens.deepTeal}`,
+      }}
+    >
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-2.5 md:px-8">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Lock className="h-3.5 w-3.5 shrink-0" style={{ color: tokens.accentTeal }} />
+          <p
+            className="truncate text-[11px] font-bold uppercase"
+            style={{ ...styles.mono, letterSpacing: "0.16em", color: tokens.cream }}
+          >
+            <span className="hidden sm:inline">Public preview · </span>
+            Real holdings &amp; performance available to clients
+          </p>
+        </div>
+        <a
+          href="https://iconocapital.com/get-started"
+          target="_blank"
+          rel="noreferrer"
+          className="shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase transition-transform hover:scale-105"
+          style={{
+            ...styles.mono,
+            background: tokens.coral,
+            color: tokens.char,
+            letterSpacing: "0.16em",
+          }}
+        >
+          Become a client
+        </a>
+      </div>
+    </div>
+  )
+}
+
+function GalleryView({
+  onSelect,
+  mode,
+}: {
+  onSelect: (id: string) => void
+  mode: ViewMode
+}) {
+  const isProspect = mode === "prospect"
   return (
     <div className="mx-auto max-w-7xl px-5 md:px-8">
       <section className="pt-16 pb-12 md:pt-24" style={{ borderBottom: `2px solid ${tokens.ink}` }}>
@@ -57,22 +108,84 @@ function GalleryView({ onSelect }: { onSelect: (id: string) => void }) {
           className="mt-4 pr-2 leading-[0.92]"
           style={{ ...styles.display, fontWeight: 700, color: tokens.deepTeal, fontSize: "clamp(44px, 8vw, 96px)" }}
         >
-          Five portfolios.<br />
-          <span style={{ color: tokens.coral }}>One philosophy.</span>
+          {isProspect ? (
+            <>
+              Five portfolios.<br />
+              <span style={{ color: tokens.coral }}>One that&apos;s yours.</span>
+            </>
+          ) : (
+            <>
+              Five portfolios.<br />
+              <span style={{ color: tokens.coral }}>One philosophy.</span>
+            </>
+          )}
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed" style={{ color: tokens.inkSoft }}>
-          Brand-anchored when it should be. Loud when the product earns it. Each portfolio is named for the place that embodies its purpose, animated around what it actually does.
+          {isProspect
+            ? "Each portfolio is named for the place that embodies its purpose. The architecture is on display. The actual positions, the rebalances, the harvested losses — those are for clients."
+            : "Brand-anchored when it should be. Loud when the product earns it. Each portfolio is named for the place that embodies its purpose, animated around what it actually does."}
         </p>
       </section>
 
       <section id="series" className="pt-10 pb-24">
         <div className="grid grid-cols-12 gap-5 md:gap-6">
           {portfolios.map((p, i) => (
-            <PortfolioCard key={p.id} portfolio={p} index={i} onSelect={onSelect} />
+            <PortfolioCard key={p.id} portfolio={p} index={i} onSelect={onSelect} mode={mode} />
           ))}
+          {isProspect && <ProspectCTACard />}
         </div>
       </section>
     </div>
+  )
+}
+
+function ProspectCTACard() {
+  return (
+    <a
+      href="https://iconocapital.com/get-started"
+      target="_blank"
+      rel="noreferrer"
+      className="group col-span-12 relative isolate overflow-hidden rounded-[24px] p-7 md:p-12 text-left transition-shadow duration-500 hover:shadow-2xl"
+      style={{
+        background: tokens.coral,
+        color: tokens.char,
+        boxShadow: "0 1px 2px rgba(28,83,85,0.04), 0 8px 32px rgba(28,83,85,0.06)",
+        minHeight: 320,
+      }}
+    >
+      <p className="text-[10px] font-bold" style={{ ...styles.mono, opacity: 0.7 }}>
+        Your portfolio · 06
+      </p>
+      <h3
+        className="mt-3 leading-[0.92] text-[56px] md:text-[96px]"
+        style={{ ...styles.display, fontWeight: 700, color: tokens.char }}
+      >
+        Yours.
+      </h3>
+      <p
+        className="mt-5 max-w-[680px] text-[16px] md:text-[20px] leading-snug"
+        style={{ color: tokens.char }}
+      >
+        Built around the life you actually live, the taxes you actually pay, and the goals you actually have. Not the model that fits the most spreadsheet rows.
+      </p>
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <span
+          className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-[12px] font-bold uppercase"
+          style={{
+            ...styles.mono,
+            background: tokens.char,
+            color: tokens.cream,
+            letterSpacing: "0.16em",
+          }}
+        >
+          Book a 30-minute fit call
+          <ArrowUpRight className="h-4 w-4" strokeWidth={2.5} />
+        </span>
+        <span className="text-[13px]" style={{ color: tokens.char, opacity: 0.7 }}>
+          No obligation. No pitch. Just a conversation about whether we&apos;re the right fit.
+        </span>
+      </div>
+    </a>
   )
 }
 
@@ -80,14 +193,18 @@ function PortfolioCard({
   portfolio,
   index,
   onSelect,
+  mode,
 }: {
   portfolio: Portfolio
   index: number
   onSelect: (id: string) => void
+  mode: ViewMode
 }) {
   const isActive = portfolio.status === "active"
   const isFlagship = portfolio.id === "voyageurs"
   const isFinale = portfolio.id === "saguaro"
+  const isProspect = mode === "prospect"
+  const alpha = portfolio.ytd - portfolio.benchmarkYtd
 
   // Grid rhythm across 12 cols: 7+5, 7+5, 12 (finale).
   const span: Record<string, string> = {
@@ -232,7 +349,9 @@ function PortfolioCard({
             }}
           >
             <p className="text-[10px] font-bold" style={{ ...styles.mono, opacity: 0.65 }}>
-              YTD · VS {portfolio.benchmarkLabel.toUpperCase()}
+              {isProspect
+                ? `ALPHA · VS ${portfolio.benchmarkLabel.toUpperCase()}`
+                : `YTD · VS ${portfolio.benchmarkLabel.toUpperCase()}`}
             </p>
             <div className="mt-1 flex items-baseline gap-3">
               <span
@@ -244,10 +363,12 @@ function PortfolioCard({
                   lineHeight: 0.9,
                 }}
               >
-                +{portfolio.ytd.toFixed(2)}%
+                {isProspect ? teaseAlpha(alpha) : `+${portfolio.ytd.toFixed(2)}%`}
               </span>
               <span className="text-[13px]" style={{ opacity: 0.55 }}>
-                vs +{portfolio.benchmarkYtd.toFixed(2)}%
+                {isProspect
+                  ? `YTD ${teaseYtd(portfolio.ytd)}`
+                  : `vs +${portfolio.benchmarkYtd.toFixed(2)}%`}
               </span>
             </div>
           </div>
@@ -264,7 +385,15 @@ function PortfolioCard({
   )
 }
 
-function DetailView({ portfolio, onBack }: { portfolio: Portfolio; onBack: () => void }) {
+function DetailView({
+  portfolio,
+  onBack,
+  mode,
+}: {
+  portfolio: Portfolio
+  onBack: () => void
+  mode: ViewMode
+}) {
   return (
     <div className="mx-auto max-w-7xl px-5 md:px-8 pb-20 pt-8">
       <button
@@ -276,7 +405,7 @@ function DetailView({ portfolio, onBack }: { portfolio: Portfolio; onBack: () =>
         BACK TO SERIES
       </button>
 
-      <PortfolioDetail portfolio={portfolio} />
+      <PortfolioDetail portfolio={portfolio} mode={mode} />
     </div>
   )
 }

@@ -11,14 +11,29 @@ import {
   type Portfolio,
 } from "../lib/portfolio-data"
 import { tokens, styles } from "../lib/design-kit"
+import {
+  teaseYtd,
+  teaseAlpha,
+  tickerCategory,
+  valueCreatedTeaser,
+  type ViewMode,
+} from "../lib/prospect-data"
 import { HeroMotifStage } from "./motifs"
 import { ParkScene } from "./park-scenes"
 import { AllocationAtlas, PortfolioCompass } from "./widgets"
+import { BlurNumber, BlurField, BlurOverlay } from "./blur-reveal"
 
 type SortKey = "symbol" | "weight"
 type SortDirection = "asc" | "desc"
 
-export function PortfolioDetail({ portfolio }: { portfolio: Portfolio }) {
+export function PortfolioDetail({
+  portfolio,
+  mode = "client",
+}: {
+  portfolio: Portfolio
+  mode?: ViewMode
+}) {
+  const isProspect = mode === "prospect"
   // Top performer is whichever sleeve has the highest YTD inside THIS portfolio.
   const topPerformerId = portfolio.sleeves.reduce(
     (best, s) => (s.ytdPerformance > best.ytdPerformance ? s : best),
@@ -92,17 +107,25 @@ export function PortfolioDetail({ portfolio }: { portfolio: Portfolio }) {
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <Pill bg={`${portfolio.palette.accent}26`} fg={portfolio.palette.fg}>
                 <span style={{ ...styles.mono, fontSize: 11, fontWeight: 700 }}>YTD</span>
-                <span style={{ ...styles.display, fontWeight: 700, fontSize: 18 }}>+{portfolio.ytd.toFixed(2)}%</span>
+                <span style={{ ...styles.display, fontWeight: 700, fontSize: 18 }}>
+                  {isProspect ? teaseYtd(portfolio.ytd) : `+${portfolio.ytd.toFixed(2)}%`}
+                </span>
               </Pill>
               <Pill bg="rgba(255,255,255,0.05)" fg={portfolio.palette.fg}>
                 <span style={{ ...styles.mono, fontSize: 11, fontWeight: 700, opacity: 0.7 }}>
                   VS {portfolio.benchmarkLabel.toUpperCase()}
                 </span>
-                <span style={{ fontSize: 14 }}>+{portfolio.benchmarkYtd.toFixed(2)}%</span>
+                <span style={{ fontSize: 14 }}>
+                  {isProspect ? teaseYtd(portfolio.benchmarkYtd) : `+${portfolio.benchmarkYtd.toFixed(2)}%`}
+                </span>
               </Pill>
               <Pill bg={`${portfolio.palette.accent}26`} fg={portfolio.palette.accent} ring>
                 <Sparkles className="h-4 w-4" strokeWidth={2.5} />
-                <span style={{ ...styles.display, fontWeight: 700, fontSize: 16 }}>+{alpha}% alpha</span>
+                <span style={{ ...styles.display, fontWeight: 700, fontSize: 16 }}>
+                  {isProspect
+                    ? `${teaseAlpha(portfolio.ytd - portfolio.benchmarkYtd)} alpha`
+                    : `+${alpha}% alpha`}
+                </span>
               </Pill>
             </div>
           </div>
@@ -119,10 +142,24 @@ export function PortfolioDetail({ portfolio }: { portfolio: Portfolio }) {
       </section>
 
       <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <StatCard label="YTD Return" value={`+${portfolio.ytd.toFixed(2)}%`} accent />
-        <StatCard label={`vs ${portfolio.benchmarkLabel}`} value={`+${alpha}%`} sublabel="alpha" />
+        <StatCard
+          label="YTD Return"
+          value={isProspect ? teaseYtd(portfolio.ytd) : `+${portfolio.ytd.toFixed(2)}%`}
+          accent
+        />
+        <StatCard
+          label={`vs ${portfolio.benchmarkLabel}`}
+          value={
+            isProspect
+              ? teaseAlpha(portfolio.ytd - portfolio.benchmarkYtd)
+              : `+${alpha}%`
+          }
+          sublabel="alpha"
+        />
         <StatCard label="Inception" value="Jan 2026" sublabel="live track record" />
       </section>
+
+      {isProspect && <ValueCreatedTeaser portfolio={portfolio} />}
 
       {/* WIDGETS — Allocation Atlas + Portfolio Compass */}
       <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -159,6 +196,7 @@ export function PortfolioDetail({ portfolio }: { portfolio: Portfolio }) {
               sortKey={sortKey}
               sortDirection={sortDirection}
               onSort={handleSort}
+              isProspect={isProspect}
             />
           ))}
         </div>
@@ -281,6 +319,7 @@ function SleeveRow({
   sortKey,
   sortDirection,
   onSort,
+  isProspect,
 }: {
   sleeve: Sleeve
   isTopPerformer: boolean
@@ -289,6 +328,7 @@ function SleeveRow({
   sortKey: SortKey
   sortDirection: SortDirection
   onSort: (k: SortKey) => void
+  isProspect: boolean
 }) {
   const standout = isTopPerformer
   const hasHoldings = !!sleeve.holdings && sleeve.holdings.length > 0
@@ -380,7 +420,7 @@ function SleeveRow({
               color: standout ? tokens.accentTeal : tokens.deepTeal,
             }}
           >
-            +{sleeve.ytdPerformance}%
+            {isProspect ? teaseYtd(sleeve.ytdPerformance) : `+${sleeve.ytdPerformance}%`}
           </p>
         </div>
 
@@ -417,13 +457,20 @@ function SleeveRow({
               >
                 {sleeve.description}
               </p>
-              <HoldingsTable
-                sortKey={sortKey}
-                sortDirection={sortDirection}
-                onSort={onSort}
-                sortedHoldings={sortedHoldings}
-                inverted={!!standout}
-              />
+              <BlurOverlay
+                prospect={isProspect}
+                label={`Real ${sleeve.name.toLowerCase()} positions unlock when you become a client.`}
+                ctaLabel="Start the conversation"
+              >
+                <HoldingsTable
+                  sortKey={sortKey}
+                  sortDirection={sortDirection}
+                  onSort={onSort}
+                  sortedHoldings={sortedHoldings}
+                  inverted={!!standout}
+                  isProspect={isProspect}
+                />
+              </BlurOverlay>
             </div>
           </motion.div>
         )}
@@ -438,12 +485,14 @@ function HoldingsTable({
   onSort,
   sortedHoldings,
   inverted,
+  isProspect = false,
 }: {
   sortKey: SortKey
   sortDirection: SortDirection
   onSort: (k: SortKey) => void
   sortedHoldings: Holding[]
   inverted: boolean
+  isProspect?: boolean
 }) {
   const total = sortedHoldings.reduce((s, h) => s + h.weight, 0)
   const max = Math.max(...sortedHoldings.map((h) => h.weight))
@@ -540,18 +589,22 @@ function HoldingsTable({
                     fontSize: 10,
                   }}
                 >
-                  {h.symbol.slice(0, 4)}
+                  {isProspect ? "···" : h.symbol.slice(0, 4)}
                 </span>
-                <span style={{ ...styles.display, fontWeight: 600, fontSize: 15, color: fg }}>{h.symbol}</span>
+                <span style={{ ...styles.display, fontWeight: 600, fontSize: 15, color: fg }}>
+                  {isProspect ? "···" : h.symbol}
+                </span>
               </div>
               <span className="hidden md:block truncate text-[13px]" style={{ color: fgSoft }}>
-                {tickerNames[h.symbol] ?? "—"}
+                {isProspect
+                  ? tickerCategory[h.symbol] ?? "Strategic Position"
+                  : tickerNames[h.symbol] ?? "—"}
               </span>
               <span
                 className="text-right tabular-nums shrink-0"
                 style={{ ...styles.mono, fontWeight: 700, fontSize: 14, color: fg }}
               >
-                {h.weight.toFixed(2)}%
+                {isProspect ? "XX.XX%" : `${h.weight.toFixed(2)}%`}
               </span>
               <div className="hidden md:flex justify-end">
                 <div
@@ -571,7 +624,9 @@ function HoldingsTable({
             {/* Mobile-only second row — name + weight bar */}
             <div className="mt-2 flex items-center gap-3 md:hidden">
               <span className="truncate text-[12px] flex-1" style={{ color: fgSoft }}>
-                {tickerNames[h.symbol] ?? "—"}
+                {isProspect
+                  ? tickerCategory[h.symbol] ?? "Strategic Position"
+                  : tickerNames[h.symbol] ?? "—"}
               </span>
               <div
                 className="h-1 w-[80px] shrink-0 overflow-hidden rounded-full"
@@ -620,6 +675,123 @@ function HoldingsTable({
         </span>
         <span />
       </div>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*                            ValueCreatedTeaser                              */
+/*  Prospect-only section. Shows what we DO behind the scenes — tax-loss      */
+/*  harvesting, strategic shifts, alpha — without disclosing real numbers.    */
+/* -------------------------------------------------------------------------- */
+
+function ValueCreatedTeaser({ portfolio }: { portfolio: Portfolio }) {
+  const teaser = valueCreatedTeaser[portfolio.id] ?? {
+    tlh: "$X,XXX",
+    rebalances: "9 strategic shifts",
+  }
+  const alpha = portfolio.ytd - portfolio.benchmarkYtd
+
+  return (
+    <section
+      className="mt-10 overflow-hidden rounded-[24px] p-7 md:p-10"
+      style={{
+        background: tokens.deepTeal,
+        color: tokens.cream,
+        border: `2px solid ${tokens.ink}`,
+      }}
+    >
+      <p
+        className="text-[10px] font-bold uppercase"
+        style={{ ...styles.mono, color: tokens.accentTeal }}
+      >
+        What clients actually get · YTD
+      </p>
+      <h3
+        className="mt-3 leading-[0.92] text-[40px] md:text-[56px]"
+        style={{ ...styles.display, fontWeight: 700, color: tokens.cream }}
+      >
+        It&apos;s not just the portfolio.
+      </h3>
+      <p
+        className="mt-4 max-w-2xl text-[15px] md:text-[17px] leading-relaxed"
+        style={{ opacity: 0.78 }}
+      >
+        Real allocation matters less than what we do with it. Here&apos;s the
+        work happening behind {portfolio.name} for the people who own it.
+      </p>
+
+      <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <TeaserStat
+          eyebrow="Tax-loss harvesting"
+          big={teaser.tlh}
+          caption="harvested for clients in this strategy YTD"
+          locked
+        />
+        <TeaserStat
+          eyebrow="Active management"
+          big={teaser.rebalances}
+          caption="rebalances since strategy inception, each tied to a thesis"
+        />
+        <TeaserStat
+          eyebrow="Alpha generated"
+          big={teaseAlpha(alpha)}
+          caption="over benchmark, YTD — net of fees, gross of taxes"
+        />
+      </div>
+
+      <p
+        className="mt-7 max-w-2xl text-[14px] italic leading-relaxed"
+        style={{ ...styles.serif, opacity: 0.7 }}
+      >
+        These are illustrative. Yours will look different — better, maybe —
+        because they&apos;ll be tied to your tax bracket, your goals, and the
+        accounts you actually hold.
+      </p>
+    </section>
+  )
+}
+
+function TeaserStat({
+  eyebrow,
+  big,
+  caption,
+  locked,
+}: {
+  eyebrow: string
+  big: string
+  caption: string
+  locked?: boolean
+}) {
+  return (
+    <div
+      className="rounded-[18px] p-5"
+      style={{
+        background: "rgba(245,239,228,0.06)",
+        border: `1px solid rgba(245,239,228,0.12)`,
+      }}
+    >
+      <p
+        className="text-[10px] font-bold uppercase"
+        style={{ ...styles.mono, color: tokens.accentTeal, letterSpacing: "0.16em" }}
+      >
+        {eyebrow}
+      </p>
+      <p
+        className="mt-3 text-[40px] md:text-[44px] leading-[0.95]"
+        style={{
+          ...styles.display,
+          fontWeight: 700,
+          color: tokens.cream,
+          filter: locked ? "blur(2px)" : undefined,
+          letterSpacing: "-0.04em",
+        }}
+      >
+        {big}
+      </p>
+      <p className="mt-3 text-[13px] leading-snug" style={{ opacity: 0.7 }}>
+        {caption}
+      </p>
     </div>
   )
 }
