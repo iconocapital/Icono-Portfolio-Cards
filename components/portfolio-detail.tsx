@@ -13,6 +13,7 @@ import {
 import { tokens, styles } from "../lib/design-kit"
 import { HeroMotifStage } from "./motifs"
 import { ParkScene } from "./park-scenes"
+import { AllocationAtlas, PortfolioCompass } from "./widgets"
 
 type SortKey = "symbol" | "weight"
 type SortDirection = "asc" | "desc"
@@ -121,6 +122,12 @@ export function PortfolioDetail({ portfolio }: { portfolio: Portfolio }) {
         <StatCard label="YTD Return" value={`+${portfolio.ytd.toFixed(2)}%`} accent />
         <StatCard label={`vs ${portfolio.benchmarkLabel}`} value={`+${alpha}%`} sublabel="alpha" />
         <StatCard label="Inception" value="Jan 2026" sublabel="live track record" />
+      </section>
+
+      {/* WIDGETS — Allocation Atlas + Portfolio Compass */}
+      <section className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <AllocationAtlas portfolio={portfolio} />
+        <PortfolioCompass portfolio={portfolio} />
       </section>
 
       <section className="mt-10">
